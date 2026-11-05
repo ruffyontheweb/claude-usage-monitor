@@ -75,6 +75,22 @@ class EntryPoints(unittest.TestCase):
         state = json.loads((self.home / ".cache/claude-handoff/s1.json").read_text())
         self.assertEqual((state["context_window"], state["model_id"]), (1_000_000, "claude-unmeasured-0"))
 
+    def test_statusline_leaves_unchanged_state_alone(self):
+        state_file = self.home / ".cache/claude-handoff/s1.json"
+        state_file.parent.mkdir(parents=True)
+        state_file.write_text(json.dumps({"context_window": 1_000_000, "model_id": "claude-fable-5-1",
+                                          "near_full_fired": True}))
+        before = state_file.stat()
+        payload = {"session_id": "s1", "version": "2.1.318", "model": {"id": "claude-fable-5-1"},
+                   "context_window": {"context_window_size": 1_000_000,
+                                      "current_usage": {"input_tokens": 1, "cache_creation_input_tokens": 0,
+                                                        "cache_read_input_tokens": 850_000}}}
+        r = self.run_script(STATUS, json.dumps(payload))
+        self.assertTrue(r.stdout.startswith("ctx 850K/1.0M"), r.stdout)
+        after = state_file.stat()
+        self.assertEqual((after.st_ino, after.st_mtime_ns), (before.st_ino, before.st_mtime_ns),
+                         "status line rewrote a state file it had nothing to change in")
+
     def test_statusline_null_usage_falls_back(self):
         payload = {"session_id": "s1", "transcript_path": self.transcript(5000), "version": "2.1.318",
                    "model": {"id": "claude-fable-5-1"},

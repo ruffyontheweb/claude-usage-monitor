@@ -47,6 +47,8 @@ versions, and the share of tokens from requests at or above 100K/150K/200K/300K,
 `config/handoff.json`; change `floor_tokens` there yourself, and the 300000 in the dashboard panel "Main-session tokens
 from requests above the floor" with it. The config's `revisit_if` says when to re-run.
 
+The report and the panel answer different questions. The report weighs each request by its full context size and asks whether the floor fits. The panel weighs by cache-read tokens over the last 24 h and asks whether handoffs keep conversations below the floor, so a falling panel is good news, not a reason to move the floor.
+
 ## Editing the dashboard
 
 `grafana/claude-usage.json` is bind-mounted into the container as a single file, and Grafana loads it at startup.

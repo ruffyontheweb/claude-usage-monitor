@@ -50,6 +50,11 @@ def uninstall(home: Path) -> str:
     if link_is_ours(link):
         link.unlink()
         report.append(f"removed: {link}")
+        try:
+            link.parent.rmdir()  # only succeeds when empty, i.e. nothing else lives in ~/.claude/skills
+            report.append(f"removed empty: {link.parent}")
+        except OSError:
+            pass
     return "\n".join(report)
 
 

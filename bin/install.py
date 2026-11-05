@@ -64,8 +64,17 @@ def backup(path: Path) -> Path:
 
 
 def write_settings(path: Path, data: dict) -> None:
+    """Atomic write that keeps the file's permissions and, if settings.json is a symlink, writes its target."""
+    path = Path(os.path.realpath(path))
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        mode = path.stat().st_mode & 0o777
+    else:
+        umask = os.umask(0)
+        os.umask(umask)
+        mode = 0o666 & ~umask
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".settings.", suffix=".tmp")
+    os.fchmod(fd, mode)
     with os.fdopen(fd, "w") as f:
         json.dump(data, f, indent=2)
         f.write("\n")

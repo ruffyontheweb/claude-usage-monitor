@@ -99,6 +99,39 @@ class Install(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(set(self.load()), {"statusLine", "hooks"})
 
+    def test_install_keeps_file_mode(self):
+        self.write(ORIGINAL)
+        self.settings.chmod(0o664)
+        self.run_script(INSTALL)
+        self.assertEqual(self.settings.stat().st_mode & 0o777, 0o664)
+        self.run_script(UNINSTALL)
+        self.assertEqual(self.settings.stat().st_mode & 0o777, 0o664)
+
+    def test_install_writes_through_symlink(self):
+        target = self.home / "dotfiles" / "settings.json"
+        target.parent.mkdir()
+        target.write_text(json.dumps(ORIGINAL))
+        self.settings.symlink_to(target)
+        r = self.run_script(INSTALL)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(self.settings.is_symlink())
+        self.assertIn("statusLine", json.loads(target.read_text()))
+        self.run_script(UNINSTALL)
+        self.assertTrue(self.settings.is_symlink())
+        self.assertEqual(json.loads(target.read_text()), ORIGINAL)
+
+    def test_uninstall_removes_empty_skills_dir(self):
+        self.write(ORIGINAL)
+        skills = self.home / ".claude" / "skills"
+        self.run_script(INSTALL)
+        self.run_script(UNINSTALL)
+        self.assertFalse(skills.exists())
+        skills.mkdir()
+        (skills / "other").mkdir()
+        self.run_script(INSTALL)
+        self.run_script(UNINSTALL)
+        self.assertTrue((skills / "other").is_dir())
+
     def test_refuse_foreign_statusline(self):
         self.write(dict(ORIGINAL, statusLine={"type": "command", "command": "foo.sh"}))
         before = self.settings.read_bytes()

@@ -28,12 +28,17 @@ def render(payload: dict) -> str:
 
     window = cw.get("context_window_size")
     if sid:
+        # Write only on change: an unconditional load-modify-save on every render races the hooks' writes.
         state = load_state(sid)
-        if window:
+        changed = False
+        if window and state.get("context_window") != window:
             state["context_window"] = window
-        if model_id:
+            changed = True
+        if model_id and state.get("model_id") != model_id:
             state["model_id"] = model_id
-        save_state(sid, state)
+            changed = True
+        if changed:
+            save_state(sid, state)
         window = window or state.get("context_window")
     window = window or cfg["default_context_window"]
 
