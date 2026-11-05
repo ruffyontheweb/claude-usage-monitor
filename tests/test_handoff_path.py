@@ -61,6 +61,17 @@ class NotePaths(unittest.TestCase):
         git(self.main, "checkout", "-q", "-b", "feat/c")
         self.assertIsNone(hp.latest_note(str(self.main)))
 
+    def test_latest_note_prefix_branch(self):
+        d = self.main / ".claude" / "handoffs"
+        d.mkdir(parents=True)
+        (d / "2026-11-05-1000-feat-mine.md").write_text("feat")
+        (d / "2026-11-05-1100-feat-login-other.md").write_text("feat-login")
+        git(self.main, "branch", "feat-login")
+        git(self.main, "checkout", "-q", "-b", "feat")
+        self.assertEqual(hp.latest_note(str(self.main)), d / "2026-11-05-1000-feat-mine.md")
+        git(self.main, "checkout", "-q", "feat-login")
+        self.assertEqual(hp.latest_note(str(self.main)), d / "2026-11-05-1100-feat-login-other.md")
+
     def test_outside_git(self):
         plain = self.root / "plain"
         plain.mkdir()

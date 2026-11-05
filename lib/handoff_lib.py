@@ -45,7 +45,11 @@ def context_size(transcript_path: str, tail_bytes: int = TAIL_BYTES) -> int | No
             obj = json.loads(raw)
         except ValueError:
             continue  # a half-written last line, or garbage
-        if not isinstance(obj, dict) or obj.get("type") != "assistant" or obj.get("isSidechain") is True:
+        if not isinstance(obj, dict) or obj.get("isSidechain") is True:
+            continue
+        if obj.get("subtype") == "compact_boundary" or obj.get("isCompactSummary"):
+            return None  # compacted since the last request: the old size no longer applies
+        if obj.get("type") != "assistant":
             continue
         msg = obj.get("message")
         usage = msg.get("usage") if isinstance(msg, dict) else None

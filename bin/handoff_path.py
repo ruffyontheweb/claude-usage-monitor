@@ -73,8 +73,17 @@ def latest_note(cwd: str) -> Path | None:
     d = note_dir(cwd)
     if not d.is_dir():
         return None
-    pattern = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{4}-" + re.escape(branch_slug(cwd)) + r"-.*\.md$")
-    notes = sorted(p for p in d.iterdir() if p.is_file() and pattern.match(p.name))
+    ours = branch_slug(cwd)
+    # A note name can't say where the branch ends and the topic starts ("feat-login-x" fits branch "feat" and
+    # "feat-login"), so a note belongs to the longest local branch whose slug it matches.
+    refs = _git(cwd, "for-each-ref", "--format=%(refname:short)", "refs/heads") or ""
+    slugs = {r.replace("/", "-") for r in refs.splitlines() if r} | {ours}
+
+    def owner(name: str) -> str | None:
+        hits = [s for s in slugs if re.match(r"^\d{4}-\d{2}-\d{2}-\d{4}-" + re.escape(s) + r"-.*\.md$", name)]
+        return max(hits, key=len) if hits else None
+
+    notes = sorted(p for p in d.iterdir() if p.is_file() and owner(p.name) == ours)
     return notes[-1] if notes else None
 
 

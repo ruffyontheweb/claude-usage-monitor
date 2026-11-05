@@ -19,6 +19,18 @@ class ContextSize(unittest.TestCase):
     def test_context_size_truncated_last_line(self):
         self.assertEqual(hl.context_size(str(FIXTURES / "truncated.jsonl")), 4000)
 
+    def test_context_size_after_compaction(self):
+        import json as _j
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "t.jsonl"
+            boundary = _j.dumps({"type": "system", "subtype": "compact_boundary"})
+            summary = _j.dumps({"type": "user", "isCompactSummary": True, "message": {"content": "sum"}})
+            p.write_text("\n".join([entry(835_000, "m1"), boundary, summary]) + "\n")
+            self.assertIsNone(hl.context_size(str(p)))
+            with open(p, "a") as f:
+                f.write(entry(40_000, "m2") + "\n")
+            self.assertEqual(hl.context_size(str(p)), 40_000)
+
     def test_context_size_missing_file(self):
         self.assertIsNone(hl.context_size(str(FIXTURES / "no-such-file.jsonl")))
 

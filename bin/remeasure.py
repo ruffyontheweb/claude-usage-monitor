@@ -51,9 +51,11 @@ def analyse(projects_dir: Path, days: float = 14, now: float | None = None) -> d
                     continue
                 if not isinstance(obj, dict) or obj.get("isSidechain") is True:
                     continue
-                if obj.get("isCompactSummary") or obj.get("subtype") == "compact_boundary":
+                if obj.get("subtype") == "compact_boundary":  # one per compaction
                     if last_model:
                         per_model[last_model]["compactions"] += 1
+                    continue
+                if obj.get("isCompactSummary"):  # the same compaction's summary: not counted again
                     continue
                 if obj.get("type") != "assistant":
                     continue

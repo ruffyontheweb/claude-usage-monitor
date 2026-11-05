@@ -28,6 +28,7 @@ class Remeasure(unittest.TestCase):
         lines.append(entry(150_000, "a0", model="claude-fable-5-1"))          # duplicate id: counted once
         lines.append(entry(900_000, "side", sidechain=True))                   # sidechain: ignored
         lines.append(json.dumps({"type": "system", "subtype": "compact_boundary"}))
+        lines.append(json.dumps({"type": "user", "isCompactSummary": True, "message": {"content": "continued from a conversation that was compacted"}}))
         (proj / "s1.jsonl").write_text("\n".join(lines) + "\n")
         (proj / "s2.jsonl").write_text("\n".join(
             entry(s, f"b{i}", model="claude-opus-5-5", version="2.2.1") for i, s in enumerate(MODEL_B)) + "\n")
