@@ -1,4 +1,4 @@
-{"floor_tokens": 200000, "near_full_fraction": 0.8, "default_context_window": 200000,
+{"floor_tokens": 300000, "near_full_fraction": 0.8, "default_context_window": 200000,
  "measured_on": {"date": "2026-11-05", "claude_code_versions": ["2.1"], "models": ["claude-fable-5-1"],
    "sessions": ["5f5d4165-08b0-478e-90b2-eb7290fd3784"]},
  "revisit_if": "a model not in measured_on.models, a Claude Code minor version not in measured_on.claude_code_versions, or the dashboard share-above-floor panel falling below 0.5 for a week"}

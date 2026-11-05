@@ -1,11 +1,17 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from helpers import REPO, entry
+
+sys.path.insert(0, str(REPO / "lib"))
+import handoff_lib  # noqa: E402
+
+FLOOR = handoff_lib.load_config()["floor_tokens"]  # the scripts read the live config
 
 HOOK = REPO / "bin" / "handoff_hook.py"
 STATUS = REPO / "bin" / "statusline.py"
@@ -39,7 +45,7 @@ class EntryPoints(unittest.TestCase):
         self.assertTrue(out["additionalContext"].startswith("Session handoff convention"))
 
     def test_hook_post_tool_use_nudge(self):
-        ev = {"hook_event_name": "PostToolUse", "session_id": "s1", "transcript_path": self.transcript(250_000),
+        ev = {"hook_event_name": "PostToolUse", "session_id": "s1", "transcript_path": self.transcript(FLOOR + 50_000),
               "cwd": str(self.home), "tool_name": "Bash", "tool_input": {"command": "gh pr merge 3 --squash"},
               "tool_use_id": "toolu_1"}
         r = self.run_script(HOOK, json.dumps(ev))

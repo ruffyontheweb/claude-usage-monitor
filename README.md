@@ -44,7 +44,7 @@ python3 -I ~/claude-usage-monitor/bin/remeasure.py [--days 14]
 
 Reads recent transcripts (read-only) and prints, per model, the context-size distribution, compactions, Claude Code
 versions, and the share of tokens from requests at or above 100K/150K/200K/300K, then a suggested floor. It never edits
-`config/handoff.json`; change `floor_tokens` there yourself, and the 200000 in the dashboard panel "Main-session tokens
+`config/handoff.json`; change `floor_tokens` there yourself, and the 300000 in the dashboard panel "Main-session tokens
 from requests above the floor" with it. The config's `revisit_if` says when to re-run.
 
 ## Editing the dashboard

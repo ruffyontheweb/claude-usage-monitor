@@ -24,7 +24,7 @@ class DetectBreak(unittest.TestCase):
 
 class Nudges(unittest.TestCase):
     def setUp(self):
-        self.cfg = hl.load_config()
+        self.cfg = dict(hl.load_config(), floor_tokens=200_000)  # pinned: tests the logic, not the live setting
 
     def test_break_nudge_floor(self):
         self.assertIsNone(breaks.break_nudge(self.cfg, 199_999, {}, "pr-create", "t1"))
