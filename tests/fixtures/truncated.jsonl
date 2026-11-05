@@ -1,0 +1,2 @@
+{"type": "assistant", "isSidechain": false, "version": "2.1.318", "sessionId": "s-test", "message": {"id": "m1", "model": "claude-fable-5-1", "role": "assistant", "usage": {"input_tokens": 1, "cache_creation_input_tokens": 9, "cache_read_input_tokens": 3990, "output_tokens": 50}}}
+{"type": "assistant", "isSidechain": false, "version": "2.1.
