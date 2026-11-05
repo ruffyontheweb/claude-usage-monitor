@@ -4,8 +4,8 @@ Local monitoring for Claude Code usage on node0, plus a session-handoff tool.
 
 - **Monitoring:** an LGTM container (`claude-usage-lgtm`, Grafana on http://127.0.0.1:3000) fed by Claude Code's
   OpenTelemetry export, with the dashboard in `grafana/claude-usage.json`.
-- **Session handoff:** a status line showing conversation size (`ctx 312K/1.0M`), hooks that tell Claude to suggest a
-  handoff at natural breaks (a PR created or merged) once the conversation is above a floor, a near-full warning
+- **Session handoff:** a status line showing conversation size (`ctx 312K/1.0M`), hooks that tell Claude to suggest
+  `/compact` or a handoff at natural breaks (a PR created or merged) once the conversation is above a floor, a near-full warning
   before compaction, and a `/handoff` skill that writes a one-page note for a fresh session.
   Design: `docs/specs/2026-11-05-session-handoff-design.md`.
 
@@ -28,7 +28,10 @@ JSON, if another `statusLine` is set, or if something else is at the skill path.
 
 - The status line shows `ctx <size>/<window>`, adds `· handoff at next break` above the floor, and
   `· floor unverified` when the session's model or Claude Code minor version isn't in the config's `measured_on`.
-- At a natural break above the floor, Claude finishes its reply and suggests `/handoff` in one line.
+- At a natural break above the floor, Claude finishes its reply and suggests, in one line, `/compact` if the next
+  work continues the same thread or `/handoff` if it's a new task. Measured on sdr-more: a compaction restarts the
+  conversation at 69K–80K tokens against 46K–52K for a fresh session, so for budget the two are close; the handoff
+  adds a reviewed note and saving durable decisions to the project's docs.
 - `/handoff` writes `<main checkout>/.claude/handoffs/<YYYY-MM-DD-HHMM>-<branch>-<topic>.md` (kept out of git through
   `.git/info/exclude`), shows it and stops. It never commits, pushes or opens a PR.
 - In a fresh session: "pick up from the latest handoff". The newest note for the current branch is used; with none,

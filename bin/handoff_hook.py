@@ -13,8 +13,9 @@ sys.path[:0] = [str(BIN.parent / "lib"), str(BIN)]
 
 CONVENTION = ("Session handoff convention (claude-usage-monitor): when you finish a natural unit of work (a pull "
               "request opened or merged, a plan or design written and committed, or the user saying a piece of work "
-              "is done) and a [handoff] line has said the conversation is above the floor, suggest /handoff in one "
-              "line before starting anything new. Never stop mid-task for this.")
+              "is done) and a [handoff] line has said the conversation is above the floor, suggest in one line, before "
+              "starting anything new: /compact if the next work continues the same thread (the user's usual "
+              "choice), or /handoff if it is a truly new task. Never stop mid-task for this.")
 NOTE_MENTION = " A handoff note exists for this branch: {path}. Mention it to the user once."
 
 

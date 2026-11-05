@@ -32,6 +32,8 @@ class Nudges(unittest.TestCase):
         self.assertIsNotNone(text, "200_000 is at the floor and must nudge")
         self.assertIn("200K", text)
         self.assertIn("pr-create", text)
+        self.assertIn("/compact", text)
+        self.assertIn("/handoff", text)
 
     def test_break_nudge_once_per_tool_use(self):
         state = {}
@@ -45,6 +47,9 @@ class Nudges(unittest.TestCase):
             text = breaks.size_note(self.cfg, size, 1_000_000, state)
             kind = "near" if "compaction is near" in text else "size"
             self.assertEqual(kind, want, f"size {size}: {text}")
+            if kind == "near":
+                self.assertIn("/compact", text)
+                self.assertIn("/handoff", text)
         self.assertIsNone(breaks.size_note(self.cfg, 150_000, 1_000_000, state))
 
 

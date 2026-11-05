@@ -11,10 +11,12 @@ BASH_BREAK = re.compile(r"\bgh\s+pr\s+(create|merge)\b")
 MCP_BREAK = re.compile(r"^mcp__.*github.*__(create_pull_request|merge_pull_request)$")
 
 BREAK_TEXT = ("[handoff] Natural break ({kind}) and the conversation is {size} tokens, above the {floor} floor. "
-              "Finish this reply, then suggest /handoff to the user in one line and start nothing new until they answer.")
+              "Finish this reply, then in one line suggest /compact if the next work continues this thread, or /handoff "
+              "if it is a new task; start nothing new until the user answers.")
 SIZE_TEXT = "[handoff] Conversation is {size} tokens, above the {floor} floor."
 NEAR_FULL_TEXT = ("[handoff] Conversation is {size} of a {window} window; compaction is near. "
-                  "At your next stopping point, suggest /handoff in one line. Do not stop mid-task.")
+                  "At your next stopping point, suggest in one line /compact (with what to keep) to continue, or /handoff "
+                  "if the next work is a new task. Do not stop mid-task.")
 
 
 def detect_break(event: dict) -> str | None:

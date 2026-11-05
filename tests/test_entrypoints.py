@@ -43,6 +43,8 @@ class EntryPoints(unittest.TestCase):
         out = json.loads(r.stdout)["hookSpecificOutput"]
         self.assertEqual(out["hookEventName"], "SessionStart")
         self.assertTrue(out["additionalContext"].startswith("Session handoff convention"))
+        self.assertIn("/compact", out["additionalContext"])
+        self.assertIn("/handoff", out["additionalContext"])
 
     def test_hook_post_tool_use_nudge(self):
         ev = {"hook_event_name": "PostToolUse", "session_id": "s1", "transcript_path": self.transcript(FLOOR + 50_000),
