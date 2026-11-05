@@ -193,3 +193,25 @@ How the user learns:
   sdr-more session (2026-11-05).
 - The dashboard's two trace panels fail on the 7-day range (Tempo caps search at 168 h). Fixing them is a small change
   that can ride along with the new panel; the builder may include it.
+
+## 10. Built as (checked live on Claude Code 2.1.318, 2026-11-05)
+
+Installed with `bin/install.py` (backup `settings.json.bak-20261105-021838`). A fresh session (f6d3bb75, rf-analyzer,
+claude-opus-5-5) showed `ctx 60K/1.0M · floor unverified`, and `~/.cache/claude-handoff/errors.log` was absent.
+
+Doc facts from the plan's Global Constraints:
+- VERIFIED: status-line stdin carries `session_id`, `model.id` and `context_window.context_window_size`. The session's
+  state file recorded `{"context_window": 1000000, "model_id": "claude-opus-5-5"}`.
+- VERIFIED: `SessionStart` runs with `source` `startup`, and `hookSpecificOutput.additionalContext` reaches the model.
+  The transcript has `hook_success` (`SessionStart:startup`) and `hook_additional_context` entries, and the
+  convention text is present.
+- VERIFIED: `UserPromptSubmit` gets `session_id` and a readable `transcript_path`. In session 0ad54321 its state gained
+  `near_full_fired`, which is only written after a size was read from the transcript.
+- VERIFIED: settings changes reach sessions that are already open. Hooks ran in sessions started before the install.
+- NEEDS CHECK: `PostToolUse` `tool_name`, `tool_input` and `tool_use_id`. A silent run (below the floor) leaves no
+  transcript record. The first PR created or merged above 200K will show it.
+- NEEDS CHECK: `context_window.current_usage` being null before the first call and after `/compact`. The transcript
+  fallback covers both cases either way.
+
+Deviations from sections 4 to 6 are recorded in the commit history, for example the SQL expression in the dashboard
+panel and the longest-branch match for notes.
