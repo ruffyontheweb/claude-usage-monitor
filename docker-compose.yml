@@ -1,0 +1,30 @@
+# Local OpenTelemetry backend for Claude Code usage monitoring.
+# grafana/otel-lgtm = OTel Collector + Prometheus (metrics) + Tempo (traces)
+# + Loki (logs) + Grafana, in one container. Nothing leaves this machine.
+#
+# Ports are bound to 127.0.0.1 only so the collector isn't reachable from
+# your LAN.
+
+services:
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: claude-usage-lgtm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # Grafana UI (admin / admin on first login)
+      - "127.0.0.1:4317:4317"   # OTLP gRPC
+      - "127.0.0.1:4318:4318"   # OTLP HTTP (Claude Code sends here)
+      - "127.0.0.1:9090:9090"   # Prometheus API (for command-line checks)
+    environment:
+      # Keep a quarter of metric history so you can compare week over week.
+      PROMETHEUS_EXTRA_ARGS: "--storage.tsdb.retention.time=90d"
+      # Open straight to the usage dashboard.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /otel-lgtm/grafana/conf/provisioning/dashboards/custom/claude-usage.json
+    volumes:
+      - ./grafana/claude-usage.json:/otel-lgtm/grafana/conf/provisioning/dashboards/custom/claude-usage.json:ro
+      - ./grafana/dashboards-provisioning.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/custom.yaml:ro
+      # Persist metrics/traces/logs across container restarts.
+      - lgtm-data:/data
+
+volumes:
+  lgtm-data:
