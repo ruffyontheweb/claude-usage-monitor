@@ -65,7 +65,7 @@ class EntryPoints(unittest.TestCase):
 
     def test_statusline_line(self):
         payload = {"session_id": "s1", "transcript_path": str(self.home / "none.jsonl"), "version": "2.1.318",
-                   "model": {"id": "claude-opus-5-5", "display_name": "Opus 5.5"},
+                   "model": {"id": "claude-unmeasured-0", "display_name": "Unmeasured"},
                    "context_window": {"context_window_size": 1_000_000,
                                       "current_usage": {"input_tokens": 400, "cache_creation_input_tokens": 2000,
                                                         "cache_read_input_tokens": 310_000, "output_tokens": 99}}}
@@ -73,7 +73,7 @@ class EntryPoints(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(r.stdout.strip(), "ctx 312K/1.0M · handoff at next break · floor unverified")
         state = json.loads((self.home / ".cache/claude-handoff/s1.json").read_text())
-        self.assertEqual((state["context_window"], state["model_id"]), (1_000_000, "claude-opus-5-5"))
+        self.assertEqual((state["context_window"], state["model_id"]), (1_000_000, "claude-unmeasured-0"))
 
     def test_statusline_null_usage_falls_back(self):
         payload = {"session_id": "s1", "transcript_path": self.transcript(5000), "version": "2.1.318",

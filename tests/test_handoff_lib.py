@@ -58,7 +58,7 @@ class TailOnly(unittest.TestCase):
 
 class Basis(unittest.TestCase):
     def test_basis_status(self):
-        cfg = hl.load_config()
+        cfg = dict(hl.load_config(), measured_on={"claude_code_versions": ["2.1"], "models": ["claude-fable-5-1"]})
         self.assertEqual(hl.basis_status(cfg, "claude-fable-5-1", "2.1.318"), "verified")
         self.assertEqual(hl.basis_status(cfg, "claude-opus-5-5", "2.1.318"), "unverified-model")
         self.assertEqual(hl.basis_status(cfg, "claude-fable-5-1", "2.2.0"), "unverified-version")
