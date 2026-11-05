@@ -129,11 +129,24 @@
      "datasource": {"type": "tempo", "uid": "${tempo}"},
      "targets": [{"datasource": {"type": "tempo", "uid": "${tempo}"}, "refId": "A", "queryType": "traceql", "limit": 50,
        "tableType": "traces", "query": "{ name = \"claude_code.llm_request\" && span.agent_id != nil }"}],
-     "id": 16, "gridPos": {"x": 0, "y": 35, "w": 12, "h": 10}},
+     "id": 16, "timeFrom": "24h", "gridPos": {"x": 0, "y": 35, "w": 12, "h": 10}},
     {"type": "table", "title": "Recent Fable model calls",
      "datasource": {"type": "tempo", "uid": "${tempo}"},
      "targets": [{"datasource": {"type": "tempo", "uid": "${tempo}"}, "refId": "A", "queryType": "traceql", "limit": 50,
        "tableType": "traces", "query": "{ name = \"claude_code.llm_request\" && span.model =~ \".*fable.*\" }"}],
-     "id": 17, "gridPos": {"x": 12, "y": 35, "w": 12, "h": 10}}
+     "id": 17, "timeFrom": "24h", "gridPos": {"x": 12, "y": 35, "w": 12, "h": 10}},
+    {"type": "timeseries", "title": "Main-session tokens from requests above the floor",
+     "description": "Share of main-session cache-read tokens from requests whose context was at or above the handoff floor. Falling means handoffs keep conversations small. The floor is hard-coded at 200K here, matching floor_tokens in config/handoff.json: change both together. Capped at 24h because Tempo's TraceQL metrics refuse longer ranges. The ratio is a SQL expression, not math: Tempo range results carry an exemplar frame that math expressions reject; the SQL keeps only rows with __metric_name__ = sum_over_time.",
+     "datasource": {"type": "tempo", "uid": "${tempo}"},
+     "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []},
+     "options": {"legend": {"showLegend": false, "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single", "sort": "none"}},
+     "targets": [
+       {"datasource": {"type": "tempo", "uid": "${tempo}"}, "refId": "A", "queryType": "traceql", "metricsQueryType": "range", "step": "1h", "hide": true,
+        "query": "{ name = \"claude_code.llm_request\" && span.query_source_safe = \"repl_main_thread\" && span.cache_read_tokens + span.input_tokens + span.cache_creation_tokens >= 200000 } | sum_over_time(span.cache_read_tokens)"},
+       {"datasource": {"type": "tempo", "uid": "${tempo}"}, "refId": "B", "queryType": "traceql", "metricsQueryType": "range", "step": "1h", "hide": true,
+        "query": "{ name = \"claude_code.llm_request\" && span.query_source_safe = \"repl_main_thread\" } | sum_over_time(span.cache_read_tokens)"},
+       {"datasource": {"type": "__expr__", "uid": "__expr__"}, "refId": "C", "type": "sql",
+        "expression": "SELECT b.time AS time, COALESCE(a.__value__, 0) / b.__value__ AS share FROM (SELECT time, __value__ FROM B WHERE __metric_name__ = 'sum_over_time') b LEFT JOIN (SELECT time, __value__ FROM A WHERE __metric_name__ = 'sum_over_time') a ON a.time = b.time WHERE b.__value__ > 0 ORDER BY b.time"}],
+     "id": 18, "timeFrom": "24h", "gridPos": {"x": 0, "y": 45, "w": 24, "h": 8}}
   ]
 }
