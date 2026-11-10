@@ -6,7 +6,8 @@ Local monitoring for Claude Code usage on node0, plus a session-handoff tool.
   OpenTelemetry export, with the dashboard in `grafana/claude-usage.json`.
 - **Session handoff:** a status line showing conversation size (`ctx 312K/1.0M`), hooks that tell Claude to suggest
   `/compact` or a handoff at natural breaks (a PR created or merged) once the conversation is above a floor, a near-full warning
-  before compaction, and a `/handoff` skill that writes a one-page note for a fresh session.
+  before compaction, and a `/handoff` skill that writes a short note (40 lines at most) for a fresh session; the note is
+  deleted once the next session has used it.
   Design: `docs/specs/2026-11-05-session-handoff-design.md`.
 
 Python 3 standard library only. Tests: `python3 -I -m unittest discover -s tests -v`.
