@@ -19,6 +19,9 @@ NEAR_FULL_TEXT = ("[handoff] Conversation is {size} of a {window} window; compac
                   "if the next work is a new task. Do not stop mid-task.")
 
 
+DEFAULT_SIZE_STEP = 100_000   # tokens between two size lines above the floor, when the config names none
+
+
 def detect_break(event: dict) -> str | None:
     tool = event.get("tool_name") or ""
     if tool == "Bash":
@@ -75,15 +78,31 @@ def break_nudge(config: dict, size: int | None, state: dict, kind: str, tool_use
 
 
 def size_note(config: dict, size: int | None, window: int, state: dict) -> str | None:
+    """The line a prompt gets about the conversation's size, or None.
+
+    Above the floor the size is said once per step: on crossing the floor, then each time it has grown by another
+    `size_step_tokens` (default 100K). Every prompt used to carry the line; in a long session that was the same fact
+    a hundred times. Below the floor the steps are forgotten, so the crossing after a compaction is said again. The
+    near-full line keeps its own once-per-crossing rule and counts as the line of its step.
+    """
     if size is None:
         return None
     floor = config["floor_tokens"]
+    step = max(1, int(config.get("size_step_tokens") or DEFAULT_SIZE_STEP))
+    if size < floor:
+        state["size_level"] = -1
+        level = -1
+    else:
+        level = (size - floor) // step
+    new_step = level > state.get("size_level", -1)
+    if new_step:
+        state["size_level"] = level
     if size >= window * config["near_full_fraction"]:
         if not state.get("near_full_fired"):
             state["near_full_fired"] = True
             return NEAR_FULL_TEXT.format(size=fmt_tokens(size), window=fmt_tokens(window))
     else:
         state["near_full_fired"] = False
-    if size >= floor:
+    if new_step:
         return SIZE_TEXT.format(size=fmt_tokens(size), floor=fmt_tokens(floor))
     return None

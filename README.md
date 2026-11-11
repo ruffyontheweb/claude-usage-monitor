@@ -29,6 +29,8 @@ JSON, if another `statusLine` is set, or if something else is at the skill path.
 
 - The status line shows `ctx <size>/<window>`, adds `· handoff at next break` above the floor, and
   `· floor unverified` when the session's model or Claude Code minor version isn't in the config's `measured_on`.
+- Above the floor Claude is told the conversation's size once when the floor is crossed and once for every further
+  `size_step_tokens` (100K), not on every prompt; after a compaction the next crossing is said again.
 - At a natural break above the floor, Claude finishes its reply and suggests, in one line, `/compact` if the next
   work continues the same thread or `/handoff` if it's a new task. Measured on sdr-more: a compaction restarts the
   conversation at 69K–80K tokens against 46K–52K for a fresh session, so for budget the two are close; the handoff

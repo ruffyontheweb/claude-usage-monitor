@@ -40,17 +40,50 @@ class Nudges(unittest.TestCase):
         self.assertIsNotNone(breaks.break_nudge(self.cfg, 300_000, state, "pr-merge", "t1"))
         self.assertIsNone(breaks.break_nudge(self.cfg, 300_000, state, "pr-merge", "t1"))
 
+    @staticmethod
+    def _kind(text):
+        return None if text is None else "near" if "compaction is near" in text else "size"
+
     def test_near_full_once_per_crossing(self):
         state = {}
-        seq = [(790_000, "size"), (810_000, "near"), (820_000, "size"), (300_000, "size"), (850_000, "near")]
+        # 820K is in the step 810K already announced (as near): silent. 300K is a lower step after a drop: silent too.
+        seq = [(790_000, "size"), (810_000, "near"), (820_000, None), (300_000, None), (850_000, "near")]
         for size, want in seq:
             text = breaks.size_note(self.cfg, size, 1_000_000, state)
-            kind = "near" if "compaction is near" in text else "size"
-            self.assertEqual(kind, want, f"size {size}: {text}")
-            if kind == "near":
+            self.assertEqual(self._kind(text), want, f"size {size}: {text}")
+            if want == "near":
                 self.assertIn("/compact", text)
                 self.assertIn("/handoff", text)
         self.assertIsNone(breaks.size_note(self.cfg, 150_000, 1_000_000, state))
+
+    def test_size_line_once_per_step(self):
+        # floor 200K, step 100K: one line on crossing the floor, one per further 100K, none in between
+        state = {}
+        seq = [(199_999, None), (200_000, "size"), (210_000, None), (299_999, None), (300_000, "size"),
+               (305_000, None), (520_000, "size"), (530_000, None)]
+        for size, want in seq:
+            text = breaks.size_note(self.cfg, size, 1_000_000, state)
+            self.assertEqual(self._kind(text), want, f"size {size}: {text}")
+        self.assertIn("520K", breaks.size_note(self.cfg, 520_000, 1_000_000, {}))
+
+    def test_size_line_again_after_a_compaction(self):
+        # below the floor forgets the steps: the next crossing is announced again
+        state = {}
+        self.assertEqual(self._kind(breaks.size_note(self.cfg, 450_000, 1_000_000, state)), "size")
+        self.assertIsNone(breaks.size_note(self.cfg, 460_000, 1_000_000, state))
+        self.assertIsNone(breaks.size_note(self.cfg, 70_000, 1_000_000, state))
+        self.assertEqual(self._kind(breaks.size_note(self.cfg, 205_000, 1_000_000, state)), "size")
+
+    def test_size_step_is_configurable_and_defaults_to_100k(self):
+        cfg = dict(self.cfg)
+        cfg.pop("size_step_tokens", None)
+        state = {}
+        self.assertEqual(self._kind(breaks.size_note(cfg, 200_000, 1_000_000, state)), "size")
+        self.assertIsNone(breaks.size_note(cfg, 299_999, 1_000_000, state))
+        cfg["size_step_tokens"] = 50_000
+        state = {}
+        self.assertEqual(self._kind(breaks.size_note(cfg, 200_000, 1_000_000, state)), "size")
+        self.assertEqual(self._kind(breaks.size_note(cfg, 250_000, 1_000_000, state)), "size")
 
 
 class State(unittest.TestCase):
